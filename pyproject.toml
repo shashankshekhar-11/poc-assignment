@@ -1,0 +1,23 @@
+[project]
+name = "rag-poc"
+version = "0.1.0"
+description = "RAG POC with FAISS, Gemini, and Streamlit"
+readme = "README.md"
+authors = [
+    { name = "Shashank", email = "shashankshekhar746@gmail.com" }
+]
+requires-python = ">=3.13"
+dependencies = [
+    "faiss-cpu>=1.15.0",
+    "google-generativeai>=0.8.6",
+    "numpy>=2.5.2",
+    "openai>=3.3.1",
+    "openpyxl>=3.1.5",
+    "python-docx>=1.2.0",
+    "python-dotenv>=1.2.3",
+    "streamlit>=1.62.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.5,<0.13.0"]
+build-backend = "uv_build"

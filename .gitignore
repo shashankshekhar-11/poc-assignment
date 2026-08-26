@@ -1,0 +1,16 @@
+# Environment
+.env
+
+# Vector store artifacts
+storage/
+
+# Python
+__pycache__/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
