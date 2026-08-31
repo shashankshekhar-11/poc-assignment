@@ -105,7 +105,11 @@ else:
 
         with st.chat_message("assistant"):
             with st.spinner("Searching and answering..."):
-                result = answer_question(user_input, st.session_state.vector_store)
+                result = answer_question(
+                    user_input,
+                    st.session_state.vector_store,
+                    chat_history=st.session_state.chat_messages[:-1]
+                )
 
             st.write(result["answer"])
 
