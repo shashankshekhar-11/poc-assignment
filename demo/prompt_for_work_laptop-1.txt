@@ -1,0 +1,65 @@
+Build a mock HTML/CSS/JS UI for a "Localization Agent — CSL Workbench" tool. This is a MOCK for stakeholder sign-off, not production code — keep it simple.
+
+STRICT CONSTRAINTS:
+- Exactly 3 files: index.html, styles.css, app.js. Do NOT split into more files (no component system, no separate files per feature/step). This is intentional — a previous over-engineered 10-file version broke from a single filename typo and was hard to debug.
+- Vanilla JS only, no frameworks, no build step. Must run by just opening index.html in a browser (or via Live Server).
+- Use plain `for` loops instead of `.forEach()` on NodeLists from querySelectorAll, for older browser compatibility.
+- Use CSS flexbox for the main layout (not CSS Grid) for broad compatibility.
+- Include the SheetJS library via CDN for a REAL Excel export: `https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js`
+
+DESIGN DIRECTION (avoid generic AI-tool look):
+- Color palette: warm paper background #F7F4EE, ink/text #1D2B3A, soft ink #4C5A68, copper accent #B0632A (primary actions), copper-dark #8E4E20 (hover), teal #2F5D62 (table headers), sage #4A7A5A ("done" state), rule/border #D8D2C4, panel white #FFFFFF.
+- Typography: 'Source Serif 4' (Google Fonts) for headings, 'IBM Plex Sans' for UI text, 'IBM Plex Mono' for codes/IDs and country name mono spans. Import via Google Fonts @import in CSS.
+- Overall feel: a consultant's working ledger — visible structure (borders, rules), not a generic SaaS dashboard with shadows/rounded cards.
+
+LAYOUT:
+- Header: title "Localization Agent — CSL Workbench", subtitle "Country-Specific Localization · category-to-process mapping and requirement generation", and a country dropdown (Austria, France, Italy, UK, USA) top-right.
+- Left sidebar nav (260px wide), grouped into THREE labeled sections:
+  - "Prepare": three numbered steps — (1) Localization Categories, (2) Category → L3 Mapping, (3) Modify Mapping
+  - "Orchestrate": (4) Send to Agent
+  - "Review & Export": (5) CSL Data Review
+  Each nav item is clickable, shows a small circular number badge, a bold label, and a small description line. Active step badge = copper fill; completed steps = sage fill; upcoming = outlined/faded.
+- Right main content area: one panel per step, only the active one visible (display:none toggle via a `goTo(step)` function), with Back/Continue buttons at the bottom of each panel.
+
+STEP CONTENT:
+
+Step 1 — Localization Categories (read-only table: #, Category, Description). Use this data:
+Enterprise Structure | Company code, currency, and organizational setup
+Chart of Accounts / GL | Chart of accounts, FSV, and GL periodic processing
+VAT & Tax | Tax codes, rates, and preliminary/annual VAT handling
+Statutory Reports | Periodic and annual statutory tax declarations
+Master Data | Company, customer, vendor, and material master requirements
+Intrastat | Cross-border trade and Intrastat declaration
+E-Invoicing | Electronic invoicing and government network integration
+Withholding Tax | Extended withholding tax configuration
+Payments / EBS | Payment methods and electronic bank statement processing
+Assets | Asset accounting, depreciation, and book/tax methods
+Archiving | Statutory document retention and archiving
+
+Step 2 — Category → L3 Mapping (read-only table: Category, L3 Business Process). Map each category above to an L3 process, e.g.:
+Enterprise Structure → 1.0.1 - Organizational Structure S/4HANA
+Chart of Accounts / GL → 1.0.2 - Chart of Accounts_GL S/4HANA
+VAT & Tax → 1.4.1 - GL Reporting Tax Reports S/4HANA
+Statutory Reports → 1.4.1 - GL Reporting Tax Reports S/4HANA
+Master Data → 3.0.3 - BP (Centralized Customer) S/4HANA
+Intrastat → 3.2.9 - GTS (Foreign Trade Processing) S/4HANA
+E-Invoicing → 3.4.1 - Billing Processing S/4HANA
+Withholding Tax → 2.5.1 - Direct Invoice Processing S/4HANA
+Payments / EBS → 2.5.6 - Process Payments S/4HANA
+Assets → 1.0.5 - Asset Master and Asset Group S/4HANA
+
+Step 3 — Modify Mapping: same table as Step 2, but editable — Category cell is `contenteditable="true"`, L3 cell is a `<select>` dropdown populated from a shared l3options list (same processes as above, so it's a real dropdown not free text), plus a "✕" remove-row button per row, and an "+ Add row" button below the table that appends a new editable row.
+
+Step 4 — Send to Agent: a bordered box titled "Ready to send" showing the selected country and a live count of mapping rows, with a "Send to Agent" button. On click: show a small pulsing 3-dot loading indicator with text "Agent generating CSL rows…" for ~1.4 seconds (setTimeout), then automatically navigate to Step 5 and render the results there.
+
+Step 5 — CSL Data Review: a table with columns: (expand-toggle ▸/▾), Req. ID, Localization Area, L3 Business Process, Localization Requirement. Each row also has 9 MORE fields that are hidden by default and revealed by clicking the ▸ toggle (becomes ▾ when open), shown as a 2-column label/value grid below the row: Business Purpose, SAP Module, SAP Object or Process, Mandatory or Optional, Applicable Business Scenario, Key Legal Consideration, Standard SAP, Enhancement Required, Remarks. ALL fields (summary row cells and expanded detail values) must be `contenteditable="true"`. Below the table: a "↺ Re-run agent" button (goes back to Step 4's idle state) and a "Download Excel" button.
+
+Use this exact 12-row mock dataset for Step 5 (13 fields per row — Requirement ID, Localization Area, L3 Business Process, Localization Requirement, Business Purpose, SAP Module, SAP Object or Process, Mandatory or Optional, Applicable Business Scenario, Key Legal Consideration, Standard SAP, Enhancement Required, Remarks), representing Austria S/4HANA localization requirements — cover: Company Code, Chart of Accounts and FSV, General Ledger, VAT Tax Codes, Preliminary VAT Return, Annual VAT Return U1, EC Sales List, Intrastat, B2G/Peppol E-Invoicing, Withholding Tax, SEPA Payments, Asset Accounting — with IDs AT-LOC-001 through AT-LOC-012, realistic SAP modules (FI-GL, FI-AP, FI-AA, SD, MM, DRC), and realistic Austrian legal context (UGB, VAT rates 20/13/10%, UVA/U30, e-Rechnung.gv.at/Peppol, SEPA).
+
+Download Excel behavior: read the CURRENT state of the table (including any edits made inline, both summary and expanded detail fields) and use SheetJS to generate a real .xlsx file with all 13 columns as headers, named `{country}_CSL.xlsx`, sheet name "Requirement Overview". This must work even for rows whose detail section was never expanded/clicked open (read the underlying data, not just what's visually rendered) — so keep the full 13-field row data in a JS array/object and read from the DOM cells the user could have edited, falling back correctly.
+
+Footer note: "Mock UX — data shown is illustrative. 'Send to Agent' simulates the orchestrator call; no live request is made."
+
+Changing the Country dropdown should update the mono country-name spans shown in each step's descriptive text.
+
+Please write the complete, working code for all three files now.
