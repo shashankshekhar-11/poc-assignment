@@ -93,3 +93,14 @@ Footer note: "Mock UX — data shown is illustrative. 'Send to Agent' simulates 
 Changing the Country dropdown should update country references in step text; the sample dataset can stay India-flavored regardless (note as a code comment — known mock limitation).
 
 Please write the complete, working code for all three files now, and confirm at the end that you verified the CSS actually applies (no plain-white/unstyled fallback).
+
+
+One UI change to the vertical wizard mock we just built:
+
+Remove the vertical progress rail (the column of small connected dots running down the left edge next to the stacked step cards). Replace it with a horizontal progress strip at the top of the page, directly below the shell bar and above the first step card.
+
+The horizontal strip should show all 5 steps in a row, each as: a circle (green + checkmark if completed, blue + step number if active, white + gray border + step number if pending), connected by a horizontal line between circles (green if the segment is between two completed steps, gray otherwise), with a short label centered under each circle (e.g., "Categories", "Mapping", "Modify", "Send to Agent", "Review") and a smaller status word beneath that ("Completed" / "Active" / "Pending"), matching the same color coding used elsewhere in the app (#257A3E green / #0070F2 blue / #89919A gray).
+
+Keep everything else the same â€” the stacked card wizard body, the collapse/expand behavior per step, the data, the Excel export. This is purely swapping where the step-progress indicator lives: top horizontal strip instead of left vertical rail.
+
+Please update index.html, styles.css, and app.js accordingly and confirm the change renders correctly.
