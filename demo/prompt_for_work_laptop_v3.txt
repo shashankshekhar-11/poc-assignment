@@ -1,0 +1,80 @@
+Build a mock HTML/CSS/JS UI for a "Localization Agent — CSL Workbench" tool. This is a MOCK for stakeholder sign-off, not production code — keep it simple. This is v3 of a previous mock. Two things changed based on stakeholder feedback on v2:
+(1) The Fiori visual styling did not actually apply in v2 — the page rendered plain white with default browser-style buttons. This time, verify the CSS is actually linked and the class names in the HTML match the CSS selectors exactly before finishing.
+(2) The step layout must change from click-to-switch panels to a VERTICAL WIZARD pattern (matching SAP's own `sap.m.Wizard` control in vertical mode) — all steps stacked on ONE continuous scrolling page, not separate screens you navigate between.
+
+STRICT CONSTRAINTS:
+- Exactly 3 files: index.html, styles.css, app.js. Do NOT split into more files (no component system, no separate files per feature/step, no state management library). A previous over-engineered 10-file version broke from a single filename typo and was hard to debug — stay simple.
+- Vanilla JS only, no frameworks, no build step. Must run by just opening index.html in a browser (or via Live Server).
+- Use plain `for` loops instead of `.forEach()` on NodeLists from querySelectorAll, for older browser compatibility.
+- Use CSS flexbox (not CSS Grid) for any multi-column layout, for broad compatibility.
+- Include the SheetJS library via CDN for a REAL Excel export: `https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js`
+- IMPORTANT: after writing the code, re-read styles.css and index.html yourself and confirm every class referenced in the HTML has a matching selector in the CSS, and that the `<link rel="stylesheet" href="styles.css">` tag is present and correctly pathed. This exact bug happened in the previous version — the CSS file existed but visually did not apply — so double check before presenting the result.
+
+VISUAL DESIGN — SAP Fiori / UI5 style (must be clearly visible, not subtle):
+- Page background: light gray #F2F2F2 (not white).
+- Shell bar (top header, full width, fixed): dark blue-gray #354A5E background, white text — app title "Localization Agent — CSL Workbench", smaller lighter subtitle beneath it, and a country dropdown on the right (Austria, France, Italy, UK, USA, India).
+- Primary action color: SAP Fiori blue #0070F2. Every primary button (Continue, Send to Agent, Download Excel) MUST have solid #0070F2 background and white text — verify this renders, not just default browser gray buttons.
+- Secondary buttons: white background, 1px solid #0070F2 border, #0070F2 text (Fiori "transparent" button style).
+- Semantic colors: success/completed #257A3E, warning #E76500, error #BB0000, pending/inactive gray #89919A.
+- Font: 'Arial', 'Helvetica Neue', sans-serif system stack — no serif fonts anywhere.
+- Cards: white background, 1px solid #E5E5E5 border, subtle shadow (0 0 0.125rem rgba(0,0,0,0.1)), 0.25rem border-radius max.
+- Tables: compact rows (~2.75rem height), thin #E5E5E5 dividers, header row light gray #FAFAFA background with bold labels.
+
+LAYOUT — VERTICAL WIZARD (this is the structural change from v2):
+Do NOT build a sidebar-nav-plus-swappable-content-panel layout. Instead:
+- All 5 steps are rendered as separate white Fiori cards, stacked vertically, one below another, on a SINGLE scrollable page (no sidebar navigation, no `display:none` panel-swapping between steps).
+- Each step card has a header row inside it showing: a numbered circle/badge (1-5), the step title, and a status label — "Completed" (green, with a checkmark), "Active" (blue), or "Pending" (gray).
+- Step state behavior:
+  - Steps not yet reached are COLLAPSED — show only the header row (number, title, "Pending" status), body content hidden, reduced opacity (~0.6).
+  - The CURRENT step is EXPANDED — full header plus body content visible, blue accent (e.g., 3px left border in #0070F2 on the card), full opacity.
+  - COMPLETED steps stay visible above but can be collapsed to just their header with a green checkmark and "Completed" status (clicking the header again can re-expand to review/edit).
+- Each step's body ends with a "Continue" primary button (except step 5, which ends with the Download Excel button instead). Clicking Continue collapses the current step to its completed-header state, expands the next step below it, and smooth-scrolls the page down so the newly expanded step is in view.
+- No separate "goTo(step)" panel-switching function — instead, manage an `currentStep` state variable and a render function that updates each step card's expanded/collapsed/status classes accordingly.
+- A slim vertical progress rail (small connected dots, one per step, with the same color coding — green/blue/gray) can run down the left edge of the page next to the stacked cards as a visual index (optional, keep it simple, not a full sidebar).
+
+DATA STRUCTURE — 4-LEVEL HIERARCHY (same as v2, carry this forward unchanged):
+
+Country → Localization Category → Localization Sub-category → (one or more) Localization Short Description rows, each mapped to its own "iCaptivate L3 Process". Use "iCaptivate L3 Process" as the exact column label.
+
+Use this India-based reference data (same as v2):
+
+Category: Master Data
+  Sub-category: General
+    - "Business Partner - General Vendor Master and General Customer Master (DB table LFA1) - STCD (Tax number 1): Relevant fields for Purchases Journal e.g. VAT registration number" → 2.0.3 BP (Centralized Vendor)
+    - "Organization Structure - General Ledger Accounting" → 1.0.1 Organizational Structure
+    - "Material Master" → 4.0.2 Material Master
+    - "Service Master" → 2.0.7 Service Master
+    - "Business Partner - General Vendor Master and General Customer Master (DB table KNA1) - STCD1 (Tax number 1) - standard, relevant fields for Sales journal" → 3.0.3 BP (Centralized Customer)
+  Sub-category: Customizing
+    - "Chart of Accounts – CAIN (There is no mandatory chart of accounts to be used for India)" → 1.0.2 Chart of Accounts_GL
+    - "Financial statement version – BAIN (There is no mandatory financial statement version to be used for India)" → 1.4.2 GL Reporting Information system
+
+Category: Business Functions
+  Sub-category: Accounts Payable
+    - "End to end process of Accounts Payable from Vendor creation to invoicing to payment" → 2.5.6 Process Payments
+  Sub-category: Taxes
+    - "Tax Condition — VAT (Tax Procedure for Condition-based excise determination in India - TAXINN); Data Dictionary Activity for Budget Change 2020 on Tax Collected at Source; Tax condition types - JOIG, JOCG, JOSG & JOUG to define GST tax components and JTCB, JTC1, JTC2 for TCS; Pricing procedures - Sales scenario specific to include pricing requirements such FOB price, CFR, CIF, CNF price, GST/TCS, CESS taxation" → 3.0.5 Pricing / 3.2.1 Standard Sales Order Processing / 1.4.1 GL Reporting Tax Reports
+    - "Goods and Service Tax (GST)" → 1.4.1 GL Reporting Tax Reports
+    - "Tax Invoice" → 2.5.1 Direct Invoice Processing
+
+Category: Compliance & Reporting (invent a plausible third category with 2 sub-categories, 2-3 rows each, following the same realistic SAP-localization style as above)
+
+STEP CONTENT (same 5 steps as v2, now as stacked wizard sections instead of separate panels):
+
+Step 1 — Localization Categories: read-only, compact 2-column table (Category, Sub-category), grouped by category.
+
+Step 2 — Category → L3 Mapping: read-only, full hierarchy table — Category, Sub-category, Localization Short Description, iCaptivate L3 Process — with Category/Sub-category visually grouped since multiple description rows share them.
+
+Step 3 — Modify Mapping: same hierarchical table, editable — Category, Sub-category, Description cells `contenteditable="true"`, iCaptivate L3 Process as a `<select>` dropdown. Include "✕" remove-row and "+ Add row".
+
+Step 4 — Send to Agent: shows selected country and total row count, primary "Send to Agent" button. On click: brief Fiori spinner (~1.4s via setTimeout), then auto-collapse this step and expand Step 5.
+
+Step 5 — CSL Data Review: table with expand-toggle, Req. ID, Localization Area (=Category), L3 Process, Localization Requirement (=short description) as summary columns. Expand reveals: Sub-category, Business Purpose, SAP Module, Mandatory or Optional, Key Legal Consideration, Standard SAP, Enhancement Required, Remarks (invent plausible India-flavored values per row — GST, TAXINN, STCD, etc). All fields editable. End with "↺ Re-run agent" and "Download Excel" buttons.
+
+Download Excel: reads the CURRENT table state (including edits and collapsed/never-expanded rows, from the underlying data model) and generates a real .xlsx via SheetJS with columns: Requirement ID, Category, Sub-category, Localization Requirement, iCaptivate L3 Process, Business Purpose, SAP Module, Mandatory or Optional, Key Legal Consideration, Standard SAP, Enhancement Required, Remarks. File name `{country}_CSL.xlsx`, sheet "Requirement Overview".
+
+Footer note: "Mock UX — data shown is illustrative. 'Send to Agent' simulates the orchestrator call; no live request is made."
+
+Changing the Country dropdown should update country references in step text; the sample dataset can stay India-flavored regardless (note as a code comment — known mock limitation).
+
+Please write the complete, working code for all three files now, and confirm at the end that you verified the CSS actually applies (no plain-white/unstyled fallback).
